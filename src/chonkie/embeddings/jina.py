@@ -68,11 +68,20 @@ class JinaEmbeddings(BaseEmbeddings):
         all_embeddings = []
         for i in range(0, len(texts), self._batch_size):
             batch = texts[i:i + self._batch_size]
+            self.payload = {
+                "model": self.model,
+                "task": self.task,
+                "late_chunking": self.late_chunking,
+                "embedding_type": self.embedding_type,
+                "dimensions": self._dimension,
+                "input": batch
+            }
             try:
-                response = requests.post(self.url, json=self.data, headers=self.headers)
+                response = requests.post(self.url, json=self.payload, headers=self.headers)
                 response.raise_for_status()
-                sorted_embeddings = sorted(response.data, key=lambda x: x['index'])
-                all_embeddings.extend(sorted_embeddings)
+                response_data = response.json()
+                embeddings = [item['embedding'] if 'embedding' not in item else item['embedding'] for item in response_data['data']]
+                all_embeddings.extend(embeddings)
             except requests.exceptions.HTTPError as e:
                 if len(batch)>1:
                     warnings.warn(f"Embedding failed : {str(e)}. Trying one by one")
