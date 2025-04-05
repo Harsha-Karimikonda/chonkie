@@ -4,3 +4,5 @@ chonkie.egg-info/
 
 build/*
 notebooks/*
+.env
+.venv/
